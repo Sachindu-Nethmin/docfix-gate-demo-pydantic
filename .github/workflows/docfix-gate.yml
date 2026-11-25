@@ -1,0 +1,22 @@
+name: docfix-gate
+
+# Demo of docfix-gate on a fork of pydantic. Issues here are copies of real pydantic issues.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docfix-gate
+        with:
+          mode: apply
+          repo-kind: code
+          provider: none
+          comment: needs-human

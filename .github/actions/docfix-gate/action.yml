@@ -1,0 +1,108 @@
+name: docfix-gate
+description: Label documentation issues and decide, before an AI agent runs, whether it can fix them and the fix can be checked.
+author: Sachindu Nethmin Weerasingha Pathirana
+branding:
+  icon: filter
+  color: blue
+
+inputs:
+  mode:
+    description: "suggest: write the decision to the job summary only. apply: add labels and comment."
+    default: suggest
+  provider:
+    description: "anthropic, openai-compatible (Ollama, vLLM, OpenRouter, Groq, Gemini or a company gateway), or none (rules only). Without an api-key, anthropic falls back to the rules."
+    default: anthropic
+  model:
+    description: Model name. For anthropic, a Claude model id.
+    default: claude-opus-5-5
+  effort:
+    description: Anthropic effort level. Classification works at low.
+    default: low
+  base-url:
+    description: Endpoint for provider openai-compatible, ending before /chat/completions.
+    default: ""
+  api-key:
+    description: Model key, from a repository secret.
+    default: ""
+  prompt-suffix:
+    description: Text added after the issue in the prompt.
+    default: ""
+  reasoning-effort:
+    description: For openai-compatible endpoints. none turns off thinking for Qwen3 and similar models on Ollama.
+    default: ""
+  github-token:
+    description: Token used to read and label issues.
+    default: ${{ github.token }}
+  repo-kind:
+    description: "auto, code or docs. auto treats a repository whose name contains docs, documentation or handbook as docs."
+    default: auto
+  agent-ready-label:
+    description: Label for issues an agent should attempt. Set it to your agent's queue label to plug into an existing agent.
+    default: docfix/agent-ready
+  needs-human-label:
+    description: Label for issues a person should handle. Empty to skip.
+    default: docfix/needs-human
+  label-prefix:
+    description: Prefix of the type labels (docfix/doc-content and so on).
+    default: docfix/
+  category-labels:
+    description: Add a type label as well as the route label.
+    default: "true"
+  comment:
+    description: "always, needs-human (default) or never."
+    default: needs-human
+  skip-if-assigned:
+    description: Leave issues that already have an assignee alone.
+    default: "true"
+  skip-labels:
+    description: Comma-separated labels that make the action skip an issue.
+    default: ""
+
+outputs:
+  category:
+    description: CODE_VS_DOCS, DOC_CONTENT, DOC_TOOLING or NOT_DOC
+    value: ${{ steps.gate.outputs.category }}
+  fix-check:
+    description: automatic, review or needs_knowledge (documentation repositories)
+    value: ${{ steps.gate.outputs.fix-check }}
+  route:
+    description: agent, human, none or skipped
+    value: ${{ steps.gate.outputs.route }}
+  confidence:
+    description: low, medium or high
+    value: ${{ steps.gate.outputs.confidence }}
+  labels:
+    description: Labels added (apply) or suggested (suggest), comma-separated
+    value: ${{ steps.gate.outputs.labels }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - if: inputs.provider == 'anthropic' && inputs.api-key != ''
+      shell: bash
+      run: python -m pip install --quiet --disable-pip-version-check "anthropic>=1,<2"
+    - id: gate
+      shell: bash
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_EFFORT: ${{ inputs.effort }}
+        INPUT_BASE_URL: ${{ inputs.base-url }}
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        INPUT_PROMPT_SUFFIX: ${{ inputs.prompt-suffix }}
+        INPUT_REASONING_EFFORT: ${{ inputs.reasoning-effort }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_REPO_KIND: ${{ inputs.repo-kind }}
+        INPUT_AGENT_READY_LABEL: ${{ inputs.agent-ready-label }}
+        INPUT_NEEDS_HUMAN_LABEL: ${{ inputs.needs-human-label }}
+        INPUT_LABEL_PREFIX: ${{ inputs.label-prefix }}
+        INPUT_CATEGORY_LABELS: ${{ inputs.category-labels }}
+        INPUT_COMMENT: ${{ inputs.comment }}
+        INPUT_SKIP_IF_ASSIGNED: ${{ inputs.skip-if-assigned }}
+        INPUT_SKIP_LABELS: ${{ inputs.skip-labels }}
+      run: python -m docfix_gate action
