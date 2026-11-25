@@ -2,7 +2,7 @@
 
 The rules come from the docfix-predict study:
 - In code repositories, agents produced a test-verified fix for 34.2% of CODE_VS_DOCS issues but only
-  8.6% of DOC_CONTENT issues, because the fix the tests accept usually changes code (68 of 71). So a
+  8.6% of DOC_CONTENT issues, because the fix the tests accept usually changes code (69 of 71). So a
   DOC_CONTENT issue in a code repository goes to a person, with a note on how to rewrite it.
 - In documentation repositories, a fix is safe for an agent when something can check it: a build or link
   checker (automatic), or the issue itself stating the correct content (review). When the correct content
@@ -16,7 +16,7 @@ AGENT, HUMAN, NONE = "agent", "human", "none"
 
 STUDY_NOTE = ("In the docfix-predict study (13,149 GitHub issues, 219,589 agent runs), agents produced a fix that passed "
               "the project's tests for 8.6% of issues framed as documentation changes, against 34.2% for issues where the "
-              "code contradicts the documentation. In 68 of 71 such issues, the accepted fix changed code.")
+              "code contradicts the documentation. In 69 of 71 such issues, the accepted fix changed code.")
 
 
 def decide(label, kind):
